@@ -5,10 +5,24 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   created_at timestamptz not null default now()
 );
+alter table public.profiles add column if not exists email text;
 alter table public.profiles add column if not exists full_name text;
 alter table public.profiles add column if not exists company text;
 alter table public.profiles add column if not exists avatar_url text;
 alter table public.profiles add column if not exists updated_at timestamptz not null default now();
+
+-- Drop NOT NULL on legacy columns (except id) so inserts never fail on old columns
+do $$
+declare c record;
+begin
+  for c in
+    select column_name from information_schema.columns
+    where table_schema = 'public' and table_name = 'profiles'
+      and is_nullable = 'NO' and column_name <> 'id' and column_default is null
+  loop
+    execute format('alter table public.profiles alter column %I drop not null', c.column_name);
+  end loop;
+end $$;
 
 alter table public.profiles enable row level security;
 drop policy if exists "profiles_select_own" on public.profiles;
@@ -22,8 +36,8 @@ create policy "profiles_update_own" on public.profiles for update using (auth.ui
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, full_name)
-  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)))
+  insert into public.profiles (id, email, full_name)
+  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)))
   on conflict (id) do nothing;
   return new;
 end $$;
@@ -32,8 +46,8 @@ create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
 
 -- Backfill profiles for users that already exist in this old project.
-insert into public.profiles (id, full_name)
-select u.id, coalesce(u.raw_user_meta_data->>'full_name', split_part(u.email, '@', 1))
+insert into public.profiles (id, email, full_name)
+select u.id, u.email, coalesce(u.raw_user_meta_data->>'full_name', split_part(u.email, '@', 1))
 from auth.users u on conflict (id) do nothing;
 
 create table if not exists public.projects (
