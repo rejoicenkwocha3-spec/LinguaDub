@@ -32,7 +32,7 @@ export default function Home() {
   return (
     <>
       <div className="bg-navy text-white">
-        <MarketingNav dark />
+        <MarketingNav />
         <section className="mx-auto max-w-6xl px-5 pb-20 pt-16 text-center sm:pt-24">
           <p className="mx-auto inline-block rounded-full bg-white/10 px-4 py-1.5 text-sm text-white/80">Every Voice. Every Language. Everywhere.</p>
           <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-extrabold leading-[1.1] sm:text-6xl">
@@ -106,7 +106,7 @@ export default function Home() {
         <p className="mx-auto mt-4 max-w-xl text-navy/65">Create your account and start your first dubbing project today.</p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/signup" className="btn-primary px-7 py-3 text-base">Get Started</Link>
-          <Link href="/pricing" className="btn-secondary px-7 py-3 text-base">View pricing</Link>
+          <Link href="/platform" className="btn-secondary px-7 py-3 text-base">See the platform</Link>
         </div>
       </section>
       <footer className="border-t border-navy/10 py-8 text-center text-sm text-navy/50">© 2026 LinguaDub</footer>
